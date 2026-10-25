@@ -34,24 +34,13 @@ body{
 .card{position:relative;background:#fff;margin:0 0 24px;overflow:hidden}
 .pad{position:relative;z-index:3;padding:16px 20px 0}
 
-/* ---------- waratah hologram: transparent, iridescent, tilt-reactive ---------- */
-.holodefs{position:absolute;width:0;height:0;overflow:hidden}
-.holoWrap{
-  position:absolute;left:0;right:0;top:54px;height:394px;z-index:1;pointer-events:none;
-  perspective:820px;perspective-origin:50% 50%;
-  -webkit-mask-image:radial-gradient(ellipse 82% 76% at 50% 48%,#000 52%,rgba(0,0,0,.42) 80%,rgba(0,0,0,0) 100%);
-          mask-image:radial-gradient(ellipse 82% 76% at 50% 48%,#000 52%,rgba(0,0,0,.42) 80%,rgba(0,0,0,0) 100%);
+/* watermark */
+.wm{position:absolute;left:0;right:0;top:118px;height:340px;z-index:1;pointer-events:none}
+.wm svg{width:100%;height:100%;display:block}
+.wm .soft{
+  position:absolute;inset:0;z-index:2;
+  background:radial-gradient(ellipse at 50% 45%, rgba(255,255,255,0) 0%, rgba(255,255,255,.5) 60%, rgba(255,255,255,.96) 86%);
 }
-.holo{
-  position:absolute;left:50%;top:50%;width:min(344px,88%);aspect-ratio:300/310;transform-origin:50% 50%;
-  transform:translate(-50%,-50%) translate3d(var(--tx,0px),var(--ty,0px),0)
-            rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg));
-  mix-blend-mode:multiply;opacity:.52;
-  filter:hue-rotate(var(--hue,0deg)) saturate(1.3) contrast(1.03);
-  will-change:transform,filter;
-}
-.holo svg{display:block;width:100%;height:100%}
-.holo.back{width:min(430px,108%);opacity:.2;filter:hue-rotate(var(--hue,0deg)) saturate(1.1) blur(.3px)}
 
 /* top row */
 .toprow{display:flex;align-items:flex-start;position:relative;z-index:3}
@@ -62,12 +51,13 @@ body{
 .refreshed{margin-left:auto;text-align:right;font-size:12.5px;color:#6d6d6d;line-height:1.5;padding-top:2px}
 .refreshed b{display:block;font-weight:400}
 
-/* photo */
+/* photo (wrapped in a label so tapping opens the picker natively) */
 .photolabel{display:block;width:182px;margin:10px auto 0;position:relative;z-index:3;cursor:pointer;
   -webkit-touch-callout:none;-webkit-user-select:none}
 .photolabel:active{opacity:.82}
 .photo{width:182px;height:216px;display:block;object-fit:cover;background:#d9d9d9}
 
+/* hidden file input */
 #photoInput{position:fixed;left:-9999px;top:0;width:1px;height:1px;opacity:0;pointer-events:none}
 
 /* name */
@@ -111,7 +101,7 @@ body{
 .sign span{font-family:"Snell Roundhand","Segoe Script","Brush Script MT",cursive;
   font-size:38px;color:#1c1c1c;font-style:italic}
 
-/* ---------- footer ---------- */
+/* ---------- footer: red NSW band with curved top edge ---------- */
 .foot{position:relative;background:#fff}
 .footcurve{position:absolute;left:0;top:0;width:100%;height:100%;display:block}
 .footinner{position:relative;z-index:2;display:flex;align-items:flex-end;justify-content:space-between;
@@ -140,14 +130,6 @@ body{
   background:rgba(0,0,0,.85);color:#fff;font-size:13px;font-weight:500;padding:10px 18px;border-radius:999px;
   z-index:300;opacity:0;transition:opacity .3s ease;pointer-events:none;white-space:nowrap}
 .toast.on{opacity:1}
-
-/* ---------- tilt chip ---------- */
-.tiltchip{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(70px + env(safe-area-inset-bottom));
-  z-index:210;display:none;align-items:center;gap:7px;background:rgba(18,18,18,.88);color:#fff;
-  font-size:12.5px;font-weight:600;letter-spacing:.2px;padding:9px 16px;border-radius:999px;
-  border:1px solid rgba(255,255,255,.18);white-space:nowrap}
-.tiltchip.on{display:flex}
-.tiltchip:active{opacity:.8}
 </style>
 </head>
 <body>
@@ -160,11 +142,7 @@ body{
 
 <div class="toast" id="toast"></div>
 
-<div class="tiltchip" id="tiltChip">
-  <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2.6" width="12" height="18.8" rx="2.6"/><path d="M9.6 5.6h4.8"/><circle cx="12" cy="18" r="1" fill="#fff" stroke="none"/></svg>
-  Tilt to see hologram
-</div>
-
+<!-- hidden file input the labels point at -->
 <input type="file" id="photoInput" accept="image/*">
 
 <div class="app">
@@ -178,69 +156,38 @@ body{
 
   <div class="card">
 
-    <!-- ===== waratah hologram definition (gradients + shape) ===== -->
-    <svg class="holodefs" width="0" height="0" aria-hidden="true" focusable="false">
-      <defs>
-        <linearGradient id="iri1" gradientUnits="userSpaceOnUse" x1="20" y1="330" x2="280" y2="20">
-          <stop offset="0" stop-color="#ff86c8"/><stop offset=".22" stop-color="#ffd166"/>
-          <stop offset=".45" stop-color="#9df0a8"/><stop offset=".68" stop-color="#6fd4ff"/>
-          <stop offset=".88" stop-color="#b79bff"/><stop offset="1" stop-color="#ff9d7a"/>
-        </linearGradient>
-        <linearGradient id="iri2" gradientUnits="userSpaceOnUse" x1="60" y1="340" x2="250" y2="10">
-          <stop offset="0" stop-color="#7fd8ff"/><stop offset=".24" stop-color="#a8ffd2"/>
-          <stop offset=".5" stop-color="#ffffff"/><stop offset=".72" stop-color="#ffd98a"/>
-          <stop offset="1" stop-color="#ff8fc4"/>
-        </linearGradient>
-        <linearGradient id="iri3" gradientUnits="userSpaceOnUse" x1="-10" y1="300" x2="320" y2="40">
-          <stop offset="0" stop-color="#bda6ff"/><stop offset=".2" stop-color="#8fd6ff"/>
-          <stop offset=".42" stop-color="#a9f5c9"/><stop offset=".64" stop-color="#ffe58a"/>
-          <stop offset=".84" stop-color="#ff92c6"/><stop offset="1" stop-color="#ffb27a"/>
-        </linearGradient>
-        <linearGradient id="sheenG" gradientUnits="userSpaceOnUse" x1="-160" y1="-130" x2="460" y2="440">
-          <stop offset="0" stop-color="#ffffff" stop-opacity="0"/><stop offset=".4" stop-color="#ffffff" stop-opacity="0"/>
-          <stop offset=".5" stop-color="#ffffff" stop-opacity=".85"/><stop offset=".6" stop-color="#ffffff" stop-opacity="0"/>
-          <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
-        </linearGradient>
-
-        <g id="waratah" stroke="rgba(72,84,124,.42)" stroke-width="3" stroke-linejoin="round" stroke-linecap="round">
-          <path fill="url(#iri2)" d="M46 262 C 100 286, 200 286, 254 262 C 264 268, 254 280, 236 285 C 188 296, 112 296, 64 285 C 46 280, 36 268, 46 262 Z"/>
-          <g transform="translate(150,250)">
-            <path transform="rotate(-69)" fill="url(#iri1)" d="M0 0 C -36 -42, -39 -87, -16 -129 C -9 -140, 9 -140, 16 -129 C 39 -87, 36 -42, 0 0 Z"/>
-            <path transform="rotate(69)"  fill="url(#iri3)" d="M0 0 C -36 -42, -39 -87, -16 -129 C -9 -140, 9 -140, 16 -129 C 39 -87, 36 -42, 0 0 Z"/>
-            <path transform="rotate(-47)" fill="url(#iri3)" d="M0 0 C -42 -50, -46 -104, -18 -155 C -11 -168, 11 -168, 18 -155 C 46 -104, 42 -50, 0 0 Z"/>
-            <path transform="rotate(47)"  fill="url(#iri1)" d="M0 0 C -42 -50, -46 -104, -18 -155 C -11 -168, 11 -168, 18 -155 C 46 -104, 42 -50, 0 0 Z"/>
-            <path transform="rotate(-24)" fill="url(#iri2)" d="M0 0 C -47 -56, -51 -117, -20 -173 C -12 -188, 12 -188, 20 -173 C 51 -117, 47 -56, 0 0 Z"/>
-            <path transform="rotate(24)"  fill="url(#iri2)" d="M0 0 C -47 -56, -51 -117, -20 -173 C -12 -188, 12 -188, 20 -173 C 51 -117, 47 -56, 0 0 Z"/>
-            <path fill="url(#iri1)" d="M0 0 C -50 -60, -54 -124, -22 -184 C -13 -200, 13 -200, 22 -184 C 54 -124, 50 -60, 0 0 Z"/>
+    <!-- iridescent waratah watermark -->
+    <div class="wm">
+      <svg viewBox="0 0 400 330" preserveAspectRatio="xMidYMid slice">
+        <defs>
+          <filter id="blur"><feGaussianBlur stdDeviation="7"/></filter>
+          <radialGradient id="p1"><stop offset="0" stop-color="#ff9ec9"/><stop offset="1" stop-color="#ff9ec9" stop-opacity="0"/></radialGradient>
+          <radialGradient id="p2"><stop offset="0" stop-color="#7fd0ff"/><stop offset="1" stop-color="#7fd0ff" stop-opacity="0"/></radialGradient>
+          <radialGradient id="p3"><stop offset="0" stop-color="#ffe066"/><stop offset="1" stop-color="#ffe066" stop-opacity="0"/></radialGradient>
+          <radialGradient id="p4"><stop offset="0" stop-color="#8ff0b6"/><stop offset="1" stop-color="#8ff0b6" stop-opacity="0"/></radialGradient>
+          <radialGradient id="p5"><stop offset="0" stop-color="#c6a6ff"/><stop offset="1" stop-color="#c6a6ff" stop-opacity="0"/></radialGradient>
+          <radialGradient id="p6"><stop offset="0" stop-color="#ffb07f"/><stop offset="1" stop-color="#ffb07f" stop-opacity="0"/></radialGradient>
+        </defs>
+        <g filter="url(#blur)" opacity=".9">
+          <g transform="translate(200,190)">
+            <ellipse cx="0" cy="-92" rx="46" ry="104" fill="url(#p1)" transform="rotate(-75)"/>
+            <ellipse cx="0" cy="-92" rx="46" ry="104" fill="url(#p2)" transform="rotate(-52)"/>
+            <ellipse cx="0" cy="-92" rx="46" ry="104" fill="url(#p3)" transform="rotate(-28)"/>
+            <ellipse cx="0" cy="-92" rx="46" ry="104" fill="url(#p4)" transform="rotate(-4)"/>
+            <ellipse cx="0" cy="-92" rx="46" ry="104" fill="url(#p6)" transform="rotate(22)"/>
+            <ellipse cx="0" cy="-92" rx="46" ry="104" fill="url(#p5)" transform="rotate(48)"/>
+            <ellipse cx="0" cy="-92" rx="46" ry="104" fill="url(#p2)" transform="rotate(74)"/>
+            <ellipse cx="0" cy="20" rx="40" ry="70" fill="url(#p3)" opacity=".7"/>
           </g>
         </g>
-        <clipPath id="waratahClip"><use href="#waratah"/></clipPath>
-      </defs>
-    </svg>
-
-    <!-- ===== the hologram itself: two depth layers, transparent bg ===== -->
-    <div class="holoWrap" aria-hidden="true">
-      <div class="holo back" id="holoBack">
-        <svg viewBox="0 0 300 310">
-          <use href="#waratah"/>
-          <g clip-path="url(#waratahClip)">
-            <rect x="-150" y="-150" width="600" height="620" fill="url(#sheenG)" style="mix-blend-mode:screen" opacity=".7"/>
-          </g>
-        </svg>
-      </div>
-      <div class="holo front" id="holoFront">
-        <svg viewBox="0 0 300 310">
-          <use href="#waratah"/>
-          <g clip-path="url(#waratahClip)">
-            <rect x="-150" y="-150" width="600" height="620" fill="url(#sheenG)" style="mix-blend-mode:screen" opacity=".9"/>
-          </g>
-        </svg>
-      </div>
+      </svg>
+      <div class="soft"></div>
     </div>
 
     <div class="pad">
 
       <div class="toprow">
+        <!-- TOP-LEFT LOGO — replaced by ASSETS.logo if set -->
         <div class="nswlogo" id="logoTop">
           <svg viewBox="0 0 300 310">
             <g fill="#E8112D" stroke="#000" stroke-width="7" stroke-linejoin="round" stroke-linecap="round">
@@ -309,6 +256,7 @@ body{
 
     <div class="sign"><span id="sig">Y Aziz</span></div>
 
+    <!-- ---------- red NSW footer band ---------- -->
     <div class="foot">
       <svg class="footcurve" viewBox="0 0 400 140" preserveAspectRatio="none" aria-hidden="true">
         <path d="M0 46 C 130 18, 250 8, 400 32 L400 140 L0 140 Z" fill="#E8112D"/>
@@ -320,6 +268,7 @@ body{
           <label>Card number</label>
         </div>
 
+        <!-- FOOTER LOGO — replaced by ASSETS.footerLogo (or ASSETS.logo, inverted) -->
         <div class="nswgov" id="logoFoot">
           <svg viewBox="0 0 300 310">
             <g fill="#ffffff" stroke="#E8112D" stroke-width="7" stroke-linejoin="round" stroke-linecap="round">
@@ -355,20 +304,24 @@ const ID = {
   conditions   : 'Y',
   address   : '7 Miller Ave,|Bexley North|NSW 2207',
   cardNumber: '2589786483',
-  photo     : ''
+  photo     : ''            // optional: 'img/me.jpg' or an https:// link. Blank = tap-to-choose
 };
 
 /* ============================================================
-   IMAGE URLS
+   IMAGE URLS  —  put your file paths / URLs between the quotes.
+   Leave a slot empty ('') to fall back to the built-in artwork.
+   Files live in the "img" folder next to index.html, e.g. 'img/icon.png'
    ============================================================ */
 const ASSETS = {
+  // Home-screen app icon — the Service NSW logo (square, 512x512 PNG, red circle)
   appIcon : 'img/unnamed.png',
-  logo    : 'img/icon.png',
-  footerLogo : '',
 
-  // OPTIONAL: your own waratah cut-out (transparent PNG, or white-background PNG).
-  // Leave '' to use the built-in vector waratah hologram.
-  waratah : ''
+  // NSW Government waratah used on the card (top-left). Transparent PNG.
+  logo    : 'img/icon.png',
+
+  // Optional separate white version for the red footer band.
+  // If left empty, "logo" is used and automatically turned white.
+  footerLogo : ''
 };
 /* ========================================= */
 
@@ -385,6 +338,7 @@ $('cardno').textContent = ID.cardNumber;
 $('addr').innerHTML     = ID.address.split('|').join('<br>');
 $('sig').textContent    = ID.firstName[0] + ' ' + ID.lastName.charAt(0) + ID.lastName.slice(1).toLowerCase();
 
+/* live "Refreshed" timestamp */
 function stampRefreshed(){
   const now = new Date();
   const M = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
@@ -396,6 +350,9 @@ function stampRefreshed(){
 }
 stampRefreshed();
 
+/* ============================================================
+   LOGOS — swap in your uploaded images, keep the SVG on failure
+   ============================================================ */
 function swapLogo(hostId, url, white){
   if(!url) return;
   const host = $(hostId);
@@ -408,135 +365,17 @@ function swapLogo(hostId, url, white){
   img.onerror = () => console.warn('logo failed to load, keeping built-in art:', url);
   img.src = url;
 }
+
 swapLogo('logoTop', ASSETS.logo, false);
 swapLogo('logoFoot', ASSETS.footerLogo || ASSETS.logo, !ASSETS.footerLogo);
 
-/* optional raster waratah instead of the built-in vector */
-if(ASSETS.waratah){
-  document.querySelectorAll('.holo svg').forEach(s => s.remove());
-  document.querySelectorAll('.holo').forEach(h => {
-    const im = document.createElement('img');
-    im.src = ASSETS.waratah; im.alt = '';
-    im.style.cssText = 'width:100%;height:100%;display:block;object-fit:contain';
-    h.appendChild(im);
-  });
-}
-
 /* ============================================================
-   HOLOGRAM TILT ENGINE
-   ============================================================ */
-(function(){
-  const front  = $('holoFront');
-  const back   = $('holoBack');
-  const gradEls = ['iri1','iri2','iri3'].map(id => document.getElementById(id));
-  const sheenG  = document.getElementById('sheenG');
-  if(!front || !back) return;
-
-  const base = gradEls.map(g => g ? {
-    x1:+g.getAttribute('x1'), y1:+g.getAttribute('y1'),
-    x2:+g.getAttribute('x2'), y2:+g.getAttribute('y2')
-  } : null);
-
-  const RANGE = 32;                       // degrees of tilt = full swing
-  let tx = 0, ty = 0, cx = 0, cy = 0;
-  let baseline = null, lastDevice = 0, lastPaint = 0;
-
-  function onOrient(e){
-    if(e.gamma == null && e.beta == null) return;
-    const so = screen.orientation || {};
-    const ang = (typeof so.angle === 'number') ? so.angle
-              : (typeof window.orientation === 'number' ? window.orientation : 0);
-    let g = e.gamma || 0, b = e.beta || 0, x, y;
-    if(ang === 90){ x = -b; y = g; }
-    else if(ang === 180 || ang === -180){ x = -g; y = -b; }
-    else if(ang === 270 || ang === -90){ x = b; y = -g; }
-    else { x = g; y = b; }
-    if(!baseline) baseline = { x:x, y:y };          // calibrate to how you're holding it
-    lastDevice = performance.now();
-    tx = Math.max(-1, Math.min(1, (x - baseline.x) / RANGE));
-    ty = Math.max(-1, Math.min(1, (y - baseline.y) / RANGE));
-  }
-
-  const needPerm = typeof DeviceOrientationEvent !== 'undefined' &&
-                   typeof DeviceOrientationEvent.requestPermission === 'function';
-  const chip = $('tiltChip');
-
-  async function enableTilt(){
-    try{
-      const res = await DeviceOrientationEvent.requestPermission();
-      if(res === 'granted'){
-        window.addEventListener('deviceorientation', onOrient, true);
-        baseline = null;
-        if(chip) chip.classList.remove('on');
-      }else if(chip){
-        chip.textContent = 'Motion blocked - enable in Settings';
-      }
-    }catch(err){ console.warn('tilt permission', err); }
-  }
-
-  if(needPerm){
-    if(chip) chip.classList.add('on');
-    document.addEventListener('click', function once(){
-      document.removeEventListener('click', once);
-      enableTilt();
-    }, { passive:true });
-  }else{
-    window.addEventListener('deviceorientation', onOrient, true);
-  }
-  if(chip) chip.addEventListener('click', () => { needPerm ? enableTilt() : (baseline = null); });
-
-  /* pointer fallback (desktop, or when motion is unavailable) */
-  window.addEventListener('pointermove', e => {
-    if(performance.now() - lastDevice < 900) return;
-    const r = front.getBoundingClientRect();
-    const nx = (e.clientX - (r.left + r.width  / 2)) / Math.max(180, r.width);
-    const ny = (e.clientY - (r.top  + r.height / 2)) / Math.max(180, r.height);
-    tx = Math.max(-1, Math.min(1, nx * 1.7));
-    ty = Math.max(-1, Math.min(1, ny * 1.7));
-  }, { passive:true });
-
-  function frame(now){
-    const s = now / 1000;
-    const dX = tx + Math.sin(s * 0.55) * 0.06;    // gentle idle sway
-    const dY = ty + Math.cos(s * 0.42) * 0.06;
-    cx += (dX - cx) * 0.085;
-    cy += (dY - cy) * 0.085;
-
-    front.style.setProperty('--tx', (cx * 22).toFixed(2) + 'px');
-    front.style.setProperty('--ty', (cy * 17).toFixed(2) + 'px');
-    front.style.setProperty('--rx', (-cy * 9).toFixed(2) + 'deg');
-    front.style.setProperty('--ry', ( cx * 11).toFixed(2) + 'deg');
-    back.style.setProperty('--tx', (cx * 11).toFixed(2) + 'px');
-    back.style.setProperty('--ty', (cy * 9).toFixed(2) + 'px');
-    back.style.setProperty('--rx', (-cy * 4).toFixed(2) + 'deg');
-    back.style.setProperty('--ry', ( cx * 5).toFixed(2) + 'deg');
-
-    if(now - lastPaint > 45){
-      lastPaint = now;
-      front.style.setProperty('--hue', (cx * 40 + cy * 18).toFixed(1) + 'deg');
-      back.style.setProperty('--hue',  (cx * 24 + cy * 10).toFixed(1) + 'deg');
-
-      gradEls.forEach((g, i) => {
-        const b = base[i]; if(!g || !b) return;
-        const ox = cx * 62, oy = cy * 46;
-        g.setAttribute('x1', (b.x1 + ox).toFixed(1));
-        g.setAttribute('y1', (b.y1 + oy).toFixed(1));
-        g.setAttribute('x2', (b.x2 - ox * 0.7).toFixed(1));
-        g.setAttribute('y2', (b.y2 - oy * 0.7).toFixed(1));
-      });
-      if(sheenG) sheenG.setAttribute('gradientTransform',
-        'translate(' + (cx * 140).toFixed(1) + ' ' + (cy * 108).toFixed(1) + ')');
-    }
-    requestAnimationFrame(frame);
-  }
-  requestAnimationFrame(frame);
-})();
-
-/* ============================================================
-   PHOTO
+   PHOTO — tap the photo (or the thumbnail) to pick one.
+   Saved through THREE independent routes so a reload always
+   restores it: localStorage -> IndexedDB -> URL fragment.
    ============================================================ */
 const PHOTO_KEY = 'nswdl.photo';
-const PHOTO_W = 320, PHOTO_H = 380;
+const PHOTO_W = 320, PHOTO_H = 380;   // ~1.8x the display size (182 x 216)
 
 const PORTRAIT = "data:image/svg+xml;utf8," + encodeURIComponent(
 "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 182 216'>" +
@@ -555,12 +394,16 @@ const PORTRAIT = "data:image/svg+xml;utf8," + encodeURIComponent(
 
 function paint(src){ $('photo').src = src; $('thumb').src = src; }
 
+/* ---------- route 1: localStorage ---------- */
 function lsGet(){ try{ return localStorage.getItem(PHOTO_KEY); }catch(e){ return null; } }
 function lsSet(v){
-  try{ localStorage.setItem(PHOTO_KEY, v); return localStorage.getItem(PHOTO_KEY) === v; }
-  catch(e){ console.warn('localStorage unavailable', e); return false; }
+  try{
+    localStorage.setItem(PHOTO_KEY, v);
+    return localStorage.getItem(PHOTO_KEY) === v;   // verify it actually stuck
+  }catch(e){ console.warn('localStorage unavailable', e); return false; }
 }
 
+/* ---------- route 2: IndexedDB ---------- */
 function idbOpen(){
   return new Promise((res, rej) => {
     if(!window.indexedDB) return rej(new Error('no indexedDB'));
@@ -593,6 +436,7 @@ async function idbGet(){
   return v;
 }
 
+/* ---------- route 3: URL fragment (survives any reload) ---------- */
 function hashGet(){
   try{ return location.hash.indexOf('#p=') === 0 ? location.hash.slice(3) : null; }
   catch(e){ return null; }
@@ -601,13 +445,13 @@ function hashSet(uri){
   try{ history.replaceState(null, '', '#p=' + uri); return true; }
   catch(e){
     try{ location.hash = 'p=' + uri; return true; }
-    catch(e2){ return false; }
+    catch(e2){ console.warn('could not write photo to URL', e2); return false; }
   }
 }
 
 async function loadPhoto(){
   let uri = hashGet();
-  if(uri){ lsSet(uri); }
+  if(uri){ lsSet(uri); }                    // re-mirror the fragment into storage
   if(!uri) uri = lsGet();
   if(!uri){ try{ uri = await idbGet(); }catch(e){} }
   if(!uri) uri = ID.photo || PORTRAIT;
@@ -621,13 +465,19 @@ async function savePhoto(uri){
   return ok || hashed;
 }
 
+/* centre-crop to the licence aspect ratio, biased slightly upward so the head fits */
 function cropTo(src, w, h){
   const iw = src.width, ih = src.height;
   if(!iw || !ih) throw new Error('image has no size');
   const target = w / h;
   let sw = iw, sh = ih, sx = 0, sy = 0;
-  if(iw / ih > target){ sw = ih * target; sx = (iw - sw) / 2; }
-  else { sh = iw / target; sy = (ih - sh) * 0.35; }
+  if(iw / ih > target){
+    sw = ih * target;
+    sx = (iw - sw) / 2;
+  }else{
+    sh = iw / target;
+    sy = (ih - sh) * 0.35;
+  }
   const c = document.createElement('canvas');
   c.width = w; c.height = h;
   const ctx = c.getContext('2d');
@@ -645,6 +495,7 @@ photoInput.addEventListener('change', async () => {
   photoInput.value = '';
   if(!file) return;
 
+  /* preferred path: createImageBitmap also applies the EXIF rotation */
   if(window.createImageBitmap){
     try{
       const bmp = await createImageBitmap(file, { imageOrientation:'from-image' });
@@ -652,21 +503,24 @@ photoInput.addEventListener('change', async () => {
       if(bmp.close) bmp.close();
       paint(uri);
       const ok = await savePhoto(uri);
-      toast(ok ? 'Photo updated' : 'Photo set - may clear on reload', ok ? 1800 : 3200);
+      toast(ok ? 'Photo updated' : 'Photo set — may clear on reload', ok ? 1800 : 3200);
       return;
-    }catch(e){ console.warn('bitmap path failed, falling back', e); }
+    }catch(e){
+      console.warn('bitmap path failed, falling back', e);
+    }
   }
 
+  /* fallback: FileReader -> Image -> canvas */
   const reader = new FileReader();
   reader.onload = () => {
     const img = new Image();
     img.onload = async () => {
       let uri;
       try{ uri = cropTo(img, PHOTO_W, PHOTO_H); }
-      catch(e){ uri = reader.result; }
+      catch(e){ console.warn(e); uri = reader.result; }
       paint(uri);
       const ok = await savePhoto(uri);
-      toast(ok ? 'Photo updated' : 'Photo set - may clear on reload', ok ? 1800 : 3200);
+      toast(ok ? 'Photo updated' : 'Photo set — may clear on reload', ok ? 1800 : 3200);
     };
     img.onerror = () => toast('Could not read that image');
     img.src = reader.result;
@@ -675,6 +529,7 @@ photoInput.addEventListener('change', async () => {
   reader.readAsDataURL(file);
 });
 
+/* feedback toast — only fires on an actual event */
 let toastTimer = null;
 function toast(msg, ms){
   const t = $('toast');
@@ -687,7 +542,7 @@ function toast(msg, ms){
 loadPhoto();
 
 /* ============================================================
-   SELF-CONTAINED QR ENCODER
+   SELF-CONTAINED QR ENCODER (byte mode, v1-40, RS ECC, mask opt)
    ============================================================ */
 const QRGen = (function(){
 
@@ -983,6 +838,10 @@ const QRGen = (function(){
   return { encode };
 })();
 
+/* ============================================================
+   QR PAYLOAD — modelled on the real NSW Digital Driver Licence
+   token: [1|0] . [signed JWT, header stripped] . [b64(type.no.ts)]
+   ============================================================ */
 const b64urlBytes = bytes => {
   let s = '';
   for(let i = 0; i < bytes.length; i++) s += String.fromCharCode(bytes[i]);
@@ -1027,13 +886,17 @@ function buildPayload(){
   return '1.' + jwt + '.' + b64urlText(core);
 }
 
+/* ---- QR payload settings ---- */
 const QR_OPTS = {
-  mode : 'full',
-  ecc  : 'M',
+  mode : 'full',    // 'full' | 'compact' | 'link' | 'data'
+  ecc  : 'M',       // L / M / Q / H
   quiet: 4,
   maxPx: 205
 };
 
+/* ============================================================
+   RENDER
+   ============================================================ */
 function drawQR(){
   let qr;
   try{
@@ -1071,6 +934,7 @@ function drawQR(){
 
 drawQR();
 
+/* tap the QR to enlarge for scanning */
 let zoomOpen = false;
 $('qr').addEventListener('click', () => {
   if(zoomOpen) return;
@@ -1090,6 +954,7 @@ $('qrzoom').addEventListener('click', () => {
   zoomOpen = false;
 });
 
+/* refresh periodically, like the real app */
 setInterval(() => {
   stampRefreshed();
   if(!zoomOpen) drawQR();
@@ -1111,6 +976,7 @@ const WARATAH_PETALS = [
 ];
 const WARATAH_BAND = "M46 262 C 100 286, 200 286, 254 262 C 264 268, 254 280, 236 285 C 188 296, 112 296, 64 285 C 46 280, 36 268, 46 262 Z";
 
+/* built-in fallback app icon: red circle + white waratah (Service NSW style) */
 function makeIcon(){
   const S = 180;
   const c = document.createElement('canvas');
@@ -1144,16 +1010,14 @@ function makeIcon(){
   return c.toDataURL('image/png');
 }
 
-const appIconEl = document.getElementById('appIcon');
-if(appIconEl){
-  if(ASSETS.appIcon){
-    const probe = new Image();
-    probe.onload  = () => { appIconEl.href = ASSETS.appIcon; };
-    probe.onerror = () => { appIconEl.href = makeIcon(); };
-    probe.src = ASSETS.appIcon;
-  }else{
-    appIconEl.href = makeIcon();
-  }
+/* app icon: your uploaded file if provided, else the generated one */
+if(ASSETS.appIcon){
+  const probe = new Image();
+  probe.onload  = () => { document.getElementById('appIcon').href = ASSETS.appIcon; };
+  probe.onerror = () => { document.getElementById('appIcon').href = makeIcon(); };
+  probe.src = ASSETS.appIcon;
+}else{
+  document.getElementById('appIcon').href = makeIcon();
 }
 </script>
 </body>
